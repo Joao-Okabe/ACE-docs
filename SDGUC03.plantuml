@@ -1,0 +1,45 @@
+@startuml SDGUC03
+title UC03 - Gerenciar Perfil da Escola
+
+actor Escola
+
+boundary "Tela Perfil" as Tela
+control "PerfilController" as Controller
+control "PerfilService" as Service
+database "PostgreSQL" as Banco
+
+Escola -> Tela : Acessa perfil
+
+Tela -> Controller : consultarPerfil()
+
+Controller -> Service : obterDados()
+
+Service -> Banco : Buscar informações
+
+Banco --> Service : Dados
+
+Service --> Controller : Perfil
+
+Controller --> Tela : Exibe perfil
+
+Escola -> Tela : Edita informações
+
+Tela -> Controller : atualizarPerfil()
+
+Controller -> Service : validarDados()
+
+alt Dados inválidos
+
+    Service --> Controller : Erros encontrados
+    Controller --> Tela : Exibir mensagens
+
+else Dados válidos
+
+    Service -> Banco : Atualizar cadastro
+    Banco --> Service : Atualizado
+    Service --> Controller : Sucesso
+    Controller --> Tela : Exibir confirmação
+
+end
+
+@enduml

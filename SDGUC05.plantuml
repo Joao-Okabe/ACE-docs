@@ -1,0 +1,44 @@
+@startuml SDGUC05
+title UC05 - Trancar Escola
+
+actor Administrador
+
+boundary "Tela Escolas" as Tela
+control "EscolaController" as Controller
+control "EscolaService" as Service
+database "PostgreSQL" as Banco
+
+Administrador -> Tela : Seleciona escola
+
+Tela -> Controller : bloquear(id)
+
+Controller -> Service : validarSenha()
+
+alt Senha inválida
+
+Service --> Controller : Erro
+Controller --> Tela : Informar erro
+
+else Senha válida
+
+Service -> Banco : Verificar status
+
+alt Escola já bloqueada
+
+Banco --> Service : Bloqueada
+Service --> Controller : Informar situação
+Controller --> Tela : Exibir mensagem
+
+else Escola ativa
+
+Banco --> Service : Ativa
+Service -> Banco : Atualizar status
+Banco --> Service : OK
+Service --> Controller : Bloqueio realizado
+Controller --> Tela : Exibir sucesso
+
+end
+
+end
+
+@enduml

@@ -1,0 +1,58 @@
+@startuml SDGUC01
+title UC01 - Cadastrar Escola
+
+actor Administrador
+
+boundary "Tela Cadastro" as Tela
+control "EscolaController" as Controller
+control "EscolaService" as Service
+database "PostgreSQL" as Banco
+
+Administrador -> Tela : Acessa tela de cadastro
+Tela --> Administrador : Exibe opções\n(Manual ou Importação)
+
+alt Cadastro Manual
+
+    Administrador -> Tela : Seleciona cadastro manual
+    Tela --> Administrador : Exibe formulário
+    Administrador -> Tela : Preenche os dados
+    Tela -> Controller : cadastrarEscola(dados)
+
+else Importação
+
+    Administrador -> Tela : Seleciona importar arquivo
+    Tela --> Administrador : Solicita arquivo
+    Administrador -> Tela : Seleciona arquivo
+    Tela -> Controller : importarArquivo(arquivo)
+
+end
+
+Controller -> Service : validarDados()
+
+alt Dados inválidos
+
+    Service --> Controller : Dados inválidos
+    Controller --> Tela : Exibe mensagens de erro
+
+else Dados válidos
+
+    Service -> Banco : Verificar CNPJ
+
+    alt Escola já cadastrada
+
+        Banco --> Service : CNPJ encontrado
+        Service --> Controller : Cadastro existente
+        Controller --> Tela : Informa duplicidade
+
+    else Escola não cadastrada
+
+        Banco --> Service : CNPJ não encontrado
+        Service -> Banco : Salvar escola
+        Banco --> Service : Cadastro realizado
+        Service --> Controller : Sucesso
+        Controller --> Tela : Exibe mensagem de sucesso
+
+    end
+
+end
+@enduml

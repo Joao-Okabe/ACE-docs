@@ -1,0 +1,34 @@
+@startuml SDGUC04
+title UC04 - Consultar Escola
+
+actor Usuario
+
+boundary "Tela Consulta" as Tela
+control "EscolaController" as Controller
+control "EscolaService" as Service
+database "PostgreSQL" as Banco
+
+Usuario -> Tela : Acessa consulta
+Tela --> Usuario : Exibe filtros
+
+Usuario -> Tela : Informa filtros
+Tela -> Controller : consultar(filtros)
+
+Controller -> Service : pesquisar()
+
+Service -> Banco : Buscar escolas
+
+alt Nenhuma escola encontrada
+
+Banco --> Service : Lista vazia
+Service --> Controller : Nenhum resultado
+Controller --> Tela : Informar usuário
+
+else Escolas encontradas
+
+Banco --> Service : Lista de escolas
+Service --> Controller : Resultado
+Controller --> Tela : Exibir escolas
+
+end
+@enduml

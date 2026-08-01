@@ -1,0 +1,45 @@
+@startuml SDGUC02
+title UC02 - Autenticar Escola
+
+actor Escola
+
+boundary "Tela Login" as Tela
+control "AuthController" as Controller
+control "AuthService" as Service
+database "PostgreSQL" as Banco
+
+Escola -> Tela : Acessa tela de login
+Tela --> Escola : Exibe formulário
+
+Escola -> Tela : Informa usuário e senha
+Tela -> Controller : autenticar(credenciais)
+
+Controller -> Service : validarCredenciais()
+
+Service -> Banco : Buscar escola
+
+alt Escola não cadastrada
+
+    Banco --> Service : Não encontrada
+    Service --> Controller : Falha
+    Controller --> Tela : Informar autenticação inválida
+
+else Escola cadastrada
+
+    Banco --> Service : Escola encontrada
+
+    alt Credenciais inválidas
+
+        Service --> Controller : Senha inválida
+        Controller --> Tela : Exibir erro
+
+    else Credenciais válidas
+
+        Service --> Controller : Autenticado
+        Controller --> Tela : Exibir tela inicial
+
+    end
+
+end
+
+@enduml
