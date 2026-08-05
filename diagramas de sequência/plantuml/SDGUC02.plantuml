@@ -1,0 +1,81 @@
+@startuml SDGUC02
+title UC02 - Cadastrar Usuário
+
+actor Administrador
+
+boundary "Tela Cadastro" as Tela
+control "UsuarioController" as Controller
+control "UsuarioService" as Service
+entity "UsuarioModel" as UsuarioModel
+entity "VinculoUsuarioEscolaModel" as VinculoModel
+database "PostgreSQL" as Banco
+
+Administrador -> Tela : Acessa tela de cadastro
+Tela --> Administrador : Exibe formulário
+
+Administrador -> Tela : Preenche os dados\nSeleciona escola e papel
+Tela -> Controller : cadastrarUsuario(dados)
+
+Controller -> Service : cadastrarUsuario(dados)
+
+Service -> Service : Validar dados
+
+alt Dados inválidos
+
+    Service --> Controller : Erros de validação
+    Controller --> Tela : Exibe mensagens de erro
+
+else Dados válidos
+
+    Service -> UsuarioModel : buscarPorEmail(email)
+    UsuarioModel -> Banco : SELECT usuário
+    Banco --> UsuarioModel : Resultado
+    UsuarioModel --> Service : Resultado
+
+    alt E-mail já cadastrado
+
+        Service --> Controller : E-mail existente
+        Controller --> Tela : Exibe mensagem
+
+    else E-mail disponível
+
+        Service -> UsuarioModel : iniciarTransacao()
+        UsuarioModel -> Banco : BEGIN
+
+        Service -> UsuarioModel : inserirUsuario(dados)
+        UsuarioModel -> Banco : INSERT usuário
+        Banco --> UsuarioModel : cd_usuario
+        UsuarioModel --> Service : cd_usuario
+
+        Service -> VinculoModel : criarVinculo(cd_usuario,\ncd_escola, cd_papel)
+        VinculoModel -> Banco : INSERT vínculo
+
+        alt Erro ao criar vínculo
+
+            Banco --> VinculoModel : Erro
+            VinculoModel --> Service : Falha
+
+            Service -> UsuarioModel : rollback()
+            UsuarioModel -> Banco : ROLLBACK
+
+            Service --> Controller : Cadastro não realizado
+            Controller --> Tela : Exibe erro
+
+        else Vínculo criado
+
+            Banco --> VinculoModel : OK
+            VinculoModel --> Service : Sucesso
+
+            Service -> UsuarioModel : commit()
+            UsuarioModel -> Banco : COMMIT
+
+            Service --> Controller : Cadastro realizado
+            Controller --> Tela : Exibe sucesso
+
+        end
+
+    end
+
+end
+
+@enduml

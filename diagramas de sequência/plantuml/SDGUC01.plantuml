@@ -1,0 +1,65 @@
+@startuml SDGUC01
+title UC01 - Cadastrar Escola
+
+actor Administrador
+
+boundary "Tela Cadastro" as Tela
+control "EscolaController" as Controller
+control "EscolaService" as Service
+control "Serviço de CEP" as CEP
+database "PostgreSQL" as Banco
+
+Administrador -> Tela : Acessa a tela de cadastro
+Tela --> Administrador : Exibe formulário
+
+Administrador -> Tela : Informa o CEP
+Tela -> Controller : consultarCEP(cep)
+Controller -> Service : consultarCEP(cep)
+Service -> CEP : consultar(cep)
+
+alt CEP encontrado
+    CEP --> Service : Dados do endereço
+    Service --> Controller : Endereço
+    Controller --> Tela : Preenche endereço automaticamente
+
+else CEP inválido ou indisponível
+    CEP --> Service : Erro
+    Service --> Controller : CEP inválido
+    Controller --> Tela : Exibe mensagem de erro
+end
+
+Administrador -> Tela : Preenche os demais dados
+Tela -> Controller : cadastrarEscola(dados)
+
+Controller -> Service : validarDados(dados)
+
+alt Dados inválidos
+
+    Service --> Controller : Erros de validação
+    Controller --> Tela : Exibe mensagens de erro
+
+else Dados válidos
+
+    Service -> Banco : buscarEscolaPorEmail(email)
+
+    alt Escola já cadastrada
+
+        Banco --> Service : Email encontrado
+        Service --> Controller : Escola já cadastrada
+        Controller --> Tela : Exibe mensagem
+
+    else Escola não cadastrada
+
+        Banco --> Service : Email não encontrado
+
+        Service -> Banco : inserirEscola(dados)
+        Banco --> Service : Escola cadastrada
+
+        Service --> Controller : Sucesso
+        Controller --> Tela : Exibe confirmação
+
+    end
+
+end
+
+@enduml
