@@ -1,3 +1,53 @@
+Table vinculo_time_integrante {
+  cd_usuario integer [not null]
+  cd_time integer [not null]
+  cd_funcao_integrante integer [not null]
+  ativo boolean [not null, default: true]
+  criado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (cd_usuario, cd_time, cd_funcao_integrante) [pk]
+  }
+}
+
+Table vinculo_responsavel_time {
+  cd_responsavel integer [not null]
+  cd_time integer [not null]
+  ativo boolean [not null, default: true]
+  criado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (cd_responsavel, cd_time) [pk]
+  }
+}
+
+Table responsavel {
+  cd_responsavel integer [not null]
+  cd_usuario integer [not null]
+  nm_usuario varchar(255) [not null]
+  ativo boolean [not null, default: true]
+  criado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  
+  indexes {
+    (cd_responsavel, cd_usuario, nm_usuario) [pk]
+  }
+}
+
+Table time {
+  cd_time integer [pk, increment]
+  nm_time varchar(50) [not null, unique] 
+  path_brasao varchar(255) [not null]
+  ativo boolean [not null, default: true]
+  criado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  atualizado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+Table funcao_integrante {
+  cd_funcao_integrante integer [pk, increment]
+  nm_funcao varchar(150) [not null]
+  ds_funcao varchar(150) [not null]
+}
+
 Table papel {
   cd_papel integer [pk, increment]
   nome varchar(50) [not null, unique]
@@ -6,8 +56,10 @@ Table papel {
 
 Table usuario {
   cd_usuario integer [pk, increment]
+  nm_usuario varchar(255) [not null]
   email varchar(255) [not null, unique]
   senha varchar(255) [not null]
+  foto_perfil varchar(255) [not null]
   ativo boolean [not null, default: true]
   criado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
   atualizado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
@@ -42,9 +94,8 @@ Table vinculo_usuario_escola {
 }
 
 Table aluno {
-  cd_aluno integer [pk, increment]
+  cd_aluno integer [not null]
   cd_usuario integer [not null]
-  nome varchar(150) [not null]
   ra varchar(20) [not null, unique]
   data_nascimento date [not null]
   sexo char(1)
@@ -55,10 +106,21 @@ Table aluno {
   criado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
   atualizado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
 
+  indexes {
+    (cd_aluno, cd_usuario) [pk]
+  }
+
   Note: '''
   CHECK (sexo IN ('M', 'F', 'O') OR sexo IS NULL)
   '''
 }
+
+Ref: vinculo_responsavel_time.cd_responsavel > responsavel.cd_responsavel
+Ref: vinculo_responsavel_time.cd_time > time.cd_time
+
+Ref: vinculo_time_integrante.cd_time > time.cd_time
+Ref: vinculo_time_integrante.cd_usuario > usuario.cd_usuario
+Ref: vinculo_time_integrante.cd_funcao_integrante > funcao_integrante.cd_funcao_integrante
 
 Ref: vinculo_usuario_escola.cd_usuario > usuario.cd_usuario [delete: cascade]
 Ref: vinculo_usuario_escola.cd_escola > escola.cd_escola [delete: cascade]

@@ -8,6 +8,7 @@ Table usuario {
   cd_usuario integer [pk, increment]
   email varchar(255) [not null, unique]
   senha varchar(255) [not null]
+  foto_perfil varchar(255) [not null]
   ativo boolean [not null, default: true]
   criado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
   atualizado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]

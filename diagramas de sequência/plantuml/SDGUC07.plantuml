@@ -1,0 +1,77 @@
+@startuml SDGUC07
+title UC07 - Cadastrar Aluno
+
+actor Administrador
+
+boundary "Tela Cadastro de Aluno" as Tela
+control "AlunoController" as Controller
+control "AlunoService" as Service
+database "PostgreSQL" as Banco
+
+Administrador -> Tela : Acessa a tela de cadastro
+Tela --> Administrador : Exibe formulário
+
+Administrador -> Tela : Preenche os dados do aluno
+Tela -> Controller : cadastrarAluno(dados)
+
+Controller -> Service : cadastrar(dados)
+
+alt Dados inválidos
+
+    Service --> Controller : Erros de validação
+    Controller --> Tela : Exibe mensagens de erro
+
+else Dados válidos
+
+    Service -> Banco : buscarUsuarioPorEmail(email)
+
+    alt E-mail já cadastrado
+
+        Banco --> Service : Usuário encontrado
+        Service --> Controller : E-mail já cadastrado
+        Controller --> Tela : Exibe mensagem
+
+    else E-mail disponível
+
+        Banco --> Service : Usuário não encontrado
+
+        Service -> Banco : buscarPapel("ALUNO")
+
+        alt Papel não encontrado
+
+            Banco --> Service : Papel inexistente
+            Service --> Controller : Erro no cadastro
+            Controller --> Tela : Exibe mensagem
+
+        else Papel encontrado
+
+            opt Foto de perfil enviada
+
+                Service -> Service : Validar imagem
+                Service -> Service : Salvar arquivo
+
+            end
+
+            Service -> Banco : Iniciar transação
+
+            Service -> Banco : Inserir Usuário
+            Banco --> Service : idUsuario
+
+            Service -> Banco : Vincular Usuário\nEscola e Papel
+            Banco --> Service : Vínculo realizado
+
+            Service -> Banco : Inserir Aluno
+            Banco --> Service : Aluno cadastrado
+
+            Service -> Banco : Commit
+
+            Service --> Controller : Sucesso
+            Controller --> Tela : Exibe confirmação
+
+        end
+
+    end
+
+end
+
+@enduml

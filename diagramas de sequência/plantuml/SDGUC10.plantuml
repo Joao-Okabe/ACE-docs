@@ -1,0 +1,29 @@
+@startuml SDGUC10
+title UC10 - Editar aluno/atleta
+
+hide footbox
+autonumber
+actor "Usuário" as P0
+boundary "Tela Editar Aluno" as P1
+control "AlunoController" as P2
+control "AlunoService" as P3
+database "PostgreSQL" as P4
+
+P0 -> P1 : Abre aluno e altera dados
+P1 -> P2 : atualizar(id, dados)
+P2 -> P3 : validarAlteracoes()
+P3 -> P4 : Verificar aluno e e-mail
+P4 --> P3 : Dados atuais
+P3 -> P4 : Atualizar em transação
+P4 --> P3 : Atualizado
+P3 -> P4 : Registrar log
+P3 --> P2 : Sucesso
+P2 --> P1 : Exibir confirmação
+
+alt Dados válidos e operação permitida
+  note over P1,P3 : O fluxo principal é concluído e persistido.
+else Regra violada ou falha
+  note over P1,P3 : O sistema informa o erro e não mantém alterações parciais.
+end
+
+@enduml
