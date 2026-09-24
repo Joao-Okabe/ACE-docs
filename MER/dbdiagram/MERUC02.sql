@@ -30,7 +30,6 @@ Table vinculo_usuario_escola {
   }
 }
 
-
 Ref: vinculo_usuario_escola.cd_usuario > usuario.cd_usuario [delete: cascade]
 Ref: vinculo_usuario_escola.cd_escola > escola.cd_escola [delete: cascade]
 Ref: vinculo_usuario_escola.cd_papel > papel.cd_papel [delete: restrict]

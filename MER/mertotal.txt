@@ -1,84 +1,56 @@
-Table vinculo_time_integrante {
-  cd_usuario integer [not null]
-  cd_time integer [not null]
-  cd_funcao_integrante integer [not null]
-  ativo boolean [not null, default: true]
-  criado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
-
-  indexes {
-    (cd_usuario, cd_time, cd_funcao_integrante) [pk]
-  }
-}
-
-Table vinculo_responsavel_time {
-  cd_responsavel integer [not null]
-  cd_time integer [not null]
-  ativo boolean [not null, default: true]
-  criado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
-
-  indexes {
-    (cd_responsavel, cd_time) [pk]
-  }
-}
-
-Table responsavel {
-  cd_responsavel integer [not null]
-  cd_usuario integer [not null]
-  nm_usuario varchar(255) [not null]
-  ativo boolean [not null, default: true]
-  criado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
-  
-  indexes {
-    (cd_responsavel, cd_usuario, nm_usuario) [pk]
-  }
-}
-
-Table time {
-  cd_time integer [pk, increment]
-  nm_time varchar(50) [not null, unique] 
-  path_brasao varchar(255) [not null]
-  ativo boolean [not null, default: true]
-  criado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
-  atualizado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
-}
-
-Table funcao_integrante {
-  cd_funcao_integrante integer [pk, increment]
-  nm_funcao varchar(150) [not null]
-  ds_funcao varchar(150) [not null]
-}
+// ============================================================
+// 1. PAPÉIS
+// ============================================================
 
 Table papel {
   cd_papel integer [pk, increment]
   nome varchar(50) [not null, unique]
-  descricao text
 }
+
+
+// ============================================================
+// 2. USUÁRIOS
+// ============================================================
 
 Table usuario {
   cd_usuario integer [pk, increment]
-  nm_usuario varchar(255) [not null]
-  email varchar(255) [not null, unique]
+  nm_usuario varchar(150) [not null]
+  email varchar(150) [not null, unique]
   senha varchar(255) [not null]
-  foto_perfil varchar(255) [not null]
+  path_ft_usuario varchar
   ativo boolean [not null, default: true]
   criado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
   atualizado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
 }
 
+Table usuario_papel {
+  cd_usuario integer [not null]
+  cd_papel integer [not null]
+  ativo boolean [not null, default: true]
+
+  indexes {
+    (cd_usuario, cd_papel) [pk]
+  }
+}
+
+
+// ============================================================
+// 3. ESCOLA
+// ============================================================
+
 Table escola {
   cd_escola integer [pk, increment]
-  nome varchar(150) [not null]
-  telefone varchar(20)
-  cep varchar(9)
+  nm_escola varchar(150) [not null]
   numero varchar(20)
-  categoria_administrativa varchar(20) [not null, note: 'PUBLICA ou PRIVADA']
-  img_logo text
+  cep varchar(9)
+  telefone varchar(20)
+  email varchar(150)
+  categoria_administrativa varchar(20) [not null]
+  path_brasao text
   criada_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
   ativa boolean [not null, default: true]
 
-  Note: '''
-  CHECK (categoria_administrativa IN ('PUBLICA', 'PRIVADA'))
-  '''
+  Note: 'categoria_administrativa: Escola Municipal, Escola Estadual ou Privada'
 }
 
 Table vinculo_usuario_escola {
@@ -93,37 +65,594 @@ Table vinculo_usuario_escola {
   }
 }
 
+
+// ============================================================
+// 4. ALUNOS
+// ============================================================
+
 Table aluno {
-  cd_aluno integer [not null]
-  cd_usuario integer [not null]
+  cd_aluno integer [pk, increment]
+  cd_usuario integer [not null, unique]
   ra varchar(20) [not null, unique]
-  data_nascimento date [not null]
+  data_nascimento date
   sexo char(1)
   telefone varchar(20)
   cep varchar(9)
-  foto_perfil text
   ativo boolean [not null, default: true]
   criado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
   atualizado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
 
-  indexes {
-    (cd_aluno, cd_usuario) [pk]
-  }
-
-  Note: '''
-  CHECK (sexo IN ('M', 'F', 'O') OR sexo IS NULL)
-  '''
+  Note: 'sexo: M, F ou O'
 }
 
-Ref: vinculo_responsavel_time.cd_responsavel > responsavel.cd_responsavel
-Ref: vinculo_responsavel_time.cd_time > time.cd_time
+Table documentos_aluno {
+  cd_documentos_aluno integer [pk, increment]
+  cd_aluno integer [not null]
+  rg text
+  comprovante_escolar text
+  atestado_aptidao_fisica text
+}
+
+
+// ============================================================
+// 5. CONFIGURAÇÕES ESPORTIVAS
+// ============================================================
+
+Table formato {
+  cd_formato integer [pk, increment]
+  nm_formato varchar(30) [not null]
+  ds_formato text
+}
+
+Table modalidade {
+  cd_modalidade integer [pk, increment]
+  sexo varchar(5) [not null]
+  categoria varchar(10) [not null]
+
+  indexes {
+    (sexo, categoria) [unique]
+  }
+
+  Note: 'sexo: M, F ou MISTO, categoria: Sub14, Sub18 ou MISTO'
+}
+
+Table esporte {
+  cd_esporte integer [pk, increment]
+  nm_esporte varchar(30) [not null]
+  ds_esporte text
+}
+
+Table tipo_etapa {
+  cd_tipo_etapa integer [pk, increment]
+  nm_tipo_etapa varchar(100) [not null, unique]
+  ds_tipo_etapa text
+}
+
+
+// ============================================================
+// 6. COMPETIÇÃO
+// ============================================================
+
+Table competicao {
+  cd_competicao integer [pk, increment]
+  nm_competicao varchar(150) [not null]
+  cd_criador integer
+  cd_esporte integer [not null]
+  cd_modalidade integer [not null]
+  cd_formato integer [not null]
+  cd_escola integer
+  inicio_em timestamp
+  fim_em timestamp
+  status varchar(30) [not null, default: 'PLANEJADA']
+  descricao text
+  criado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  Note: 'status: PLANEJADA, INSCRICOES, EM_ANDAMENTO, FINALIZADA ou CANCELADA'
+}
+
+
+// ============================================================
+// 7. TIMES
+// ============================================================
+
+Table time {
+  cd_time integer [pk, increment]
+  nm_time varchar(100) [not null]
+  cd_esporte integer [not null]
+  descricao text
+  principal boolean [not null, default: false]
+  path_escudo varchar(255)
+  ativo boolean [not null, default: true]
+  criado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  atualizado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+Table funcao_integrante {
+  cd_funcao_integrante integer [pk, increment]
+  cd_esporte integer [not null]
+  nm_funcao varchar(100) [not null]
+  ds_funcao text
+
+  indexes {
+    (cd_esporte, nm_funcao) [unique]
+  }
+}
+
+Table vinculo_time_escola {
+  cd_time integer [not null]
+  cd_escola integer [not null]
+  ativo boolean [not null, default: true]
+  criado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (cd_time, cd_escola) [pk]
+  }
+}
+
+Table vinculo_time_integrante {
+  cd_vinculo_time_integrante integer [pk, increment]
+  cd_time integer [not null]
+  cd_usuario integer [not null]
+  cd_funcao_integrante integer
+  numero_camisa integer
+  capitao boolean [not null, default: false]
+  ativo boolean [not null, default: true]
+
+  indexes {
+    (cd_time, cd_usuario) [unique]
+  }
+
+  Note: 'numero_camisa deve ser maior que 0 quando informado'
+}
+
+
+// ============================================================
+// 8. RESPONSÁVEIS
+// ============================================================
+
+Table responsavel {
+  cd_responsavel integer [pk, increment]
+  cd_usuario integer [not null, unique]
+  ativo boolean [not null, default: true]
+}
+
+Table vinculo_time_responsavel {
+  cd_time integer [not null]
+  cd_responsavel integer [not null]
+  ativo boolean [not null, default: true]
+
+  indexes {
+    (cd_time, cd_responsavel) [pk]
+  }
+}
+
+
+// ============================================================
+// 9. TIMES INSCRITOS NA COMPETIÇÃO
+// ============================================================
+
+Table inscricao_competicao {
+  cd_inscricao_competicao integer [pk]
+  cd_competicao integer [not null]
+  dt_inicio_inscricao timestamp [not null]
+  dt_encerramento_inscricao timestamp
+
+  Note: 'dt_encerramento_inscricao deve ser maior ou igual a dt_inicio_inscricao'
+}
+
+Table vinculo_inscricao_time {
+  cd_inscricao_competicao integer [not null]
+  cd_time integer [not null]
+  inscrito_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  ativo boolean [not null, default: true]
+
+  indexes {
+    (cd_inscricao_competicao, cd_time) [pk]
+  }
+}
+
+
+// ============================================================
+// 10. ETAPAS DA COMPETIÇÃO
+// ============================================================
+
+Table etapa_competicao {
+  cd_etapa_competicao integer [pk, increment]
+  cd_competicao integer [not null]
+  cd_tipo_etapa integer [not null]
+  nm_etapa varchar(100) [not null]
+  ordem integer [not null]
+  descricao text
+
+  indexes {
+    (cd_competicao, ordem) [unique]
+  }
+
+  Note: 'ordem deve ser maior que 0'
+}
+
+
+// ============================================================
+// 11. RODADAS
+// ============================================================
+
+Table rodada_competicao {
+  cd_rodada integer [pk, increment]
+  cd_etapa_competicao integer [not null]
+  nr_rodada integer [not null]
+  nm_rodada varchar(100)
+  inicio_em timestamp
+  fim_em timestamp
+  status varchar(30) [not null, default: 'PENDENTE']
+
+  indexes {
+    (cd_etapa_competicao, nr_rodada) [unique]
+  }
+
+  Note: 'nr_rodada deve ser maior que 0, status: PENDENTE, EM_ANDAMENTO ou FINALIZADA'
+}
+
+
+// ============================================================
+// 12. GRUPOS
+// ============================================================
+
+Table grupo_competicao {
+  cd_grupo integer [pk, increment]
+  cd_etapa_competicao integer [not null]
+  nm_grupo varchar(50) [not null]
+
+  indexes {
+    (cd_etapa_competicao, nm_grupo) [unique]
+  }
+}
+
+Table vinculo_grupo_time {
+  cd_vinculo_grupo_time integer [pk, increment]
+  cd_grupo integer [not null]
+  cd_time integer [not null]
+
+  indexes {
+    (cd_grupo, cd_time) [unique]
+  }
+}
+
+
+// ============================================================
+// 13. MÉTRICAS DE CLASSIFICAÇÃO
+// ============================================================
+
+Table metrica_classificacao {
+  cd_metrica_classificacao integer [pk, increment]
+  nm_metrica_classificacao varchar(100) [not null, unique]
+  descricao text
+}
+
+
+// ============================================================
+// 14. CONFIGURAÇÃO DE CLASSIFICAÇÃO
+// ============================================================
+
+Table configuracao_classificacao {
+  cd_configuracao_classificacao integer [pk, increment]
+  cd_competicao integer [not null, unique]
+  nome varchar(100) [not null]
+  descricao text
+}
+
+
+// ============================================================
+// 15. CRITÉRIOS DA CLASSIFICAÇÃO
+// ============================================================
+
+Table criterio_classificacao {
+  cd_criterio_classificacao integer [pk, increment]
+  cd_configuracao_classificacao integer [not null]
+  cd_metrica_classificacao integer [not null]
+  ordem integer [not null]
+  direcao varchar(4) [not null, default: 'DESC']
+
+  indexes {
+    (cd_configuracao_classificacao, ordem) [unique]
+    (cd_configuracao_classificacao, cd_metrica_classificacao) [unique]
+  }
+
+  Note: 'direcao: ASC ou DESC, ordem deve ser maior que 0'
+}
+
+
+// ============================================================
+// 16. CLASSIFICAÇÃO DOS GRUPOS
+// ============================================================
+
+Table classificacao_grupo {
+  cd_classificacao_grupo integer [pk, increment]
+  cd_vinculo_grupo_time integer [not null, unique]
+  cd_grupo integer [not null]
+  posicao integer [not null]
+  atualizado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (cd_grupo, posicao) [unique]
+  }
+
+  Note: 'posicao deve ser maior que 0'
+}
+
+
+// ============================================================
+// 17. ESTATÍSTICAS DA CLASSIFICAÇÃO
+// ============================================================
+
+Table estatistica_classificacao {
+  cd_classificacao_grupo integer [not null]
+  cd_metrica_classificacao integer [not null]
+  valor numeric(15,3) [not null, default: 0]
+
+  indexes {
+    (cd_classificacao_grupo, cd_metrica_classificacao) [pk]
+  }
+}
+
+
+// ============================================================
+// 18. CONFRONTOS
+// ============================================================
+
+Table confronto {
+  cd_confronto integer [pk, increment]
+  cd_etapa_competicao integer [not null]
+  nr_confronto integer [not null]
+  nome varchar(100)
+
+  indexes {
+    (cd_etapa_competicao, nr_confronto) [unique]
+  }
+
+  Note: 'nr_confronto deve ser maior que 0'
+}
+
+
+// ============================================================
+// 19. ORIGEM DO PARTICIPANTE
+// ============================================================
+
+Table origem_participante_confronto {
+  cd_origem_participante integer [pk, increment]
+  tipo_origem varchar(30) [not null]
+  cd_time integer
+  cd_confronto integer
+  cd_classificacao_grupo integer
+  resultado_confronto varchar(20)
+
+  Note: 'tipo_origem: TIME, CONFRONTO ou CLASSIFICACAO_GRUPO, resultado_confronto: VENCEDOR ou PERDEDOR quando a origem for CONFRONTO'
+}
+
+
+// ============================================================
+// 20. PARTICIPANTES DO CONFRONTO
+// ============================================================
+
+Table confronto_participante {
+  cd_confronto integer [not null]
+  posicao smallint [not null]
+  cd_origem_participante integer [not null]
+
+  indexes {
+    (cd_confronto, posicao) [pk]
+    (cd_confronto, cd_origem_participante) [unique]
+  }
+
+  Note: 'posicao: 1 ou 2'
+}
+
+
+// ============================================================
+// 21. PARTIDAS
+// ============================================================
+
+Table partida {
+  cd_partida integer [pk, increment]
+  cd_competicao integer [not null]
+  cd_rodada integer
+  cd_confronto integer
+  status varchar(30) [not null, default: 'AGENDADA']
+  inicio_agendado timestamp
+
+  Note: 'status: AGENDADA, EM_ANDAMENTO, FINALIZADA ou CANCELADA'
+}
+
+
+// ============================================================
+// 22. INFORMAÇÕES DA PARTIDA
+// ============================================================
+
+Table info_partida {
+  cd_partida integer [pk]
+  dt_partida date [not null]
+  inicio_em timestamp
+  fim_em timestamp
+  local_partida varchar(150)
+  observacoes text
+}
+
+
+// ============================================================
+// 23. ETAPAS INTERNAS DA PARTIDA
+// ============================================================
+
+Table etapa_partida {
+  cd_etapa_partida integer [pk, increment]
+  cd_partida integer [not null]
+  nr_etapa integer [not null]
+  inicio_em timestamp
+  fim_em timestamp
+
+  indexes {
+    (cd_partida, nr_etapa) [unique]
+  }
+
+  Note: 'Representa tempos, sets ou outros períodos internos da partida, nr_etapa deve ser maior que 0'
+}
+
+
+// ============================================================
+// 24. RESULTADO POR ETAPA DA PARTIDA
+// ============================================================
+
+Table resultado_etapa_partida {
+  cd_etapa_partida integer [not null]
+  cd_time integer [not null]
+  pontuacao integer [not null, default: 0]
+
+  indexes {
+    (cd_etapa_partida, cd_time) [pk]
+  }
+
+  Note: 'pontuacao deve ser maior ou igual a 0'
+}
+
+
+// ============================================================
+// 25. TIMES DA PARTIDA
+// ============================================================
+
+Table vinculo_partida_time {
+  cd_partida integer [not null]
+  cd_time integer [not null]
+  mandante boolean [not null, default: false]
+
+  indexes {
+    (cd_partida, cd_time) [pk]
+  }
+}
+
+
+// ============================================================
+// 26. PENALIDADES
+// ============================================================
+
+Table tipo_penalidade {
+  cd_tipo_penalidade integer [pk, increment]
+  nm_tipo_penalidade varchar(100) [not null, unique]
+  origem_penalidade varchar(100) [not null]
+  descricao text
+}
+
+Table penalidade {
+  cd_penalidade integer [pk, increment]
+  cd_competicao integer [not null]
+  cd_partida integer
+  cd_vinculo_time_integrante integer [not null]
+  cd_tipo_penalidade integer [not null]
+  descricao text
+  valor numeric(10,3)
+  aplicado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  ativo boolean [not null, default: true]
+
+  Note: 'valor deve ser maior ou igual a 0 quando informado'
+}
+
+
+// ============================================================
+// RELACIONAMENTOS
+// ============================================================
+
+// Usuários
+Ref: usuario_papel.cd_usuario > usuario.cd_usuario
+Ref: usuario_papel.cd_papel > papel.cd_papel
+
+// Escola
+Ref: vinculo_usuario_escola.cd_usuario > usuario.cd_usuario
+Ref: vinculo_usuario_escola.cd_escola > escola.cd_escola
+Ref: vinculo_usuario_escola.cd_papel > papel.cd_papel
+
+// Alunos
+Ref: aluno.cd_usuario > usuario.cd_usuario
+Ref: documentos_aluno.cd_aluno > aluno.cd_aluno
+
+// Competição
+Ref: competicao.cd_criador > usuario.cd_usuario
+Ref: competicao.cd_esporte > esporte.cd_esporte
+Ref: competicao.cd_modalidade > modalidade.cd_modalidade
+Ref: competicao.cd_formato > formato.cd_formato
+Ref: competicao.cd_escola > escola.cd_escola
+
+// Times
+Ref: time.cd_esporte > esporte.cd_esporte
+Ref: funcao_integrante.cd_esporte > esporte.cd_esporte
+
+Ref: vinculo_time_escola.cd_time > time.cd_time
+Ref: vinculo_time_escola.cd_escola > escola.cd_escola
 
 Ref: vinculo_time_integrante.cd_time > time.cd_time
 Ref: vinculo_time_integrante.cd_usuario > usuario.cd_usuario
 Ref: vinculo_time_integrante.cd_funcao_integrante > funcao_integrante.cd_funcao_integrante
 
-Ref: vinculo_usuario_escola.cd_usuario > usuario.cd_usuario [delete: cascade]
-Ref: vinculo_usuario_escola.cd_escola > escola.cd_escola [delete: cascade]
-Ref: vinculo_usuario_escola.cd_papel > papel.cd_papel [delete: restrict]
+// Responsáveis
+Ref: responsavel.cd_usuario > usuario.cd_usuario
+Ref: vinculo_time_responsavel.cd_time > time.cd_time
+Ref: vinculo_time_responsavel.cd_responsavel > responsavel.cd_responsavel
 
-Ref: aluno.cd_usuario > usuario.cd_usuario [delete: cascade]
+// Inscrições
+Ref: inscricao_competicao.cd_competicao > competicao.cd_competicao
+Ref: vinculo_inscricao_time.cd_inscricao_competicao > inscricao_competicao.cd_inscricao_competicao
+Ref: vinculo_inscricao_time.cd_time > time.cd_time
+
+// Etapas
+Ref: etapa_competicao.cd_competicao > competicao.cd_competicao
+Ref: etapa_competicao.cd_tipo_etapa > tipo_etapa.cd_tipo_etapa
+
+// Rodadas
+Ref: rodada_competicao.cd_etapa_competicao > etapa_competicao.cd_etapa_competicao
+
+// Grupos
+Ref: grupo_competicao.cd_etapa_competicao > etapa_competicao.cd_etapa_competicao
+
+Ref: vinculo_grupo_time.cd_grupo > grupo_competicao.cd_grupo
+Ref: vinculo_grupo_time.cd_time > time.cd_time
+
+// Classificação
+Ref: configuracao_classificacao.cd_competicao > competicao.cd_competicao
+
+Ref: criterio_classificacao.cd_configuracao_classificacao > configuracao_classificacao.cd_configuracao_classificacao
+Ref: criterio_classificacao.cd_metrica_classificacao > metrica_classificacao.cd_metrica_classificacao
+
+Ref: classificacao_grupo.cd_vinculo_grupo_time > vinculo_grupo_time.cd_vinculo_grupo_time
+Ref: classificacao_grupo.cd_grupo > grupo_competicao.cd_grupo
+
+Ref: estatistica_classificacao.cd_classificacao_grupo > classificacao_grupo.cd_classificacao_grupo
+Ref: estatistica_classificacao.cd_metrica_classificacao > metrica_classificacao.cd_metrica_classificacao
+
+// Confrontos
+Ref: confronto.cd_etapa_competicao > etapa_competicao.cd_etapa_competicao
+
+Ref: origem_participante_confronto.cd_time > time.cd_time
+Ref: origem_participante_confronto.cd_confronto > confronto.cd_confronto
+Ref: origem_participante_confronto.cd_classificacao_grupo > classificacao_grupo.cd_classificacao_grupo
+
+Ref: confronto_participante.cd_confronto > confronto.cd_confronto
+Ref: confronto_participante.cd_origem_participante > origem_participante_confronto.cd_origem_participante
+
+// Partidas
+Ref: partida.cd_competicao > competicao.cd_competicao
+Ref: partida.cd_rodada > rodada_competicao.cd_rodada
+Ref: partida.cd_confronto > confronto.cd_confronto
+
+Ref: info_partida.cd_partida > partida.cd_partida
+
+// Etapas internas
+Ref: etapa_partida.cd_partida > partida.cd_partida
+
+Ref: resultado_etapa_partida.cd_etapa_partida > etapa_partida.cd_etapa_partida
+Ref: resultado_etapa_partida.cd_time > time.cd_time
+
+// Times da partida
+Ref: vinculo_partida_time.cd_partida > partida.cd_partida
+Ref: vinculo_partida_time.cd_time > time.cd_time
+
+// Penalidades
+Ref: penalidade.cd_competicao > competicao.cd_competicao
+Ref: penalidade.cd_partida > partida.cd_partida
+Ref: penalidade.cd_vinculo_time_integrante > vinculo_time_integrante.cd_vinculo_time_integrante
+Ref: penalidade.cd_tipo_penalidade > tipo_penalidade.cd_tipo_penalidade
