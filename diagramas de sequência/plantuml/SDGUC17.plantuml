@@ -1,0 +1,30 @@
+@startuml SDGUC17
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Administrador" as Admin
+actor "Escola" as Escola
+
+rectangle "Sistema de Gerenciamento" {
+    usecase "UC_17: Cadastrar Time\n(RF_03)" as UC_CadastrarTime
+    usecase "Autenticar Usuário" as UC_Autenticar
+    usecase "Validar Dados do Time" as UC_Validar
+}
+
+' Associação dos atores ao caso de uso
+Admin --> UC_CadastrarTime
+Escola --> UC_CadastrarTime
+
+' Inclusões baseadas em pré-condição e validação do fluxo básico
+UC_CadastrarTime ..> UC_Autenticar : <<include>>
+UC_CadastrarTime ..> UC_Validar : <<include>>
+
+note right of UC_CadastrarTime
+  *Pré-condição:*
+  - Usuário autenticado com permissão.
+  
+  *Fluxo Alternativo (4A):*
+  - Dados inválidos retornam para correção.
+end note
+
+@enduml

@@ -1,0 +1,45 @@
+@startuml SDGUC22
+autonumber
+skinparam responseMessageBelowArrow true
+
+title Diagrama de Sequência - Vincular Atleta a Time (UC_22)
+
+actor "Administrador" as User
+boundary "Tela do Sistema" as UI
+control "Sistema" as Sistema
+database "Banco de Dados" as DB
+
+User -> UI: Acessa a lista de atletas
+activate UI
+UI --> User: Exibe a lista de atletas
+deactivate UI
+
+User -> UI: Seleciona o atleta, o time e a função
+activate UI
+
+UI -> Sistema: Envia os dados para vincular
+activate Sistema
+
+Sistema -> Sistema: Confere se as informações são válidas
+
+alt Falha ao criar o vínculo (Fluxo Alternativo 5A)
+    Sistema -> Sistema: Cancela a operação e não salva nada
+    Sistema --> UI: Avisa que ocorreu uma falha
+    UI --> User: Mostra mensagem: "Não foi possível concluir o vínculo"
+
+else Vínculo realizado com sucesso (Fluxo Principal)
+    Sistema -> DB: Salva o vínculo do atleta com o time
+    activate DB
+    DB --> Sistema: Confirma que o vínculo foi salvo
+    deactivate DB
+    
+    Sistema -> Sistema: Registra o histórico da operação
+    
+    Sistema --> UI: Confirma o sucesso da operação
+    deactivate Sistema
+    
+    UI --> User: Mostra mensagem: "Atleta vinculado ao time com sucesso!"
+    deactivate UI
+end
+
+@enduml

@@ -1,0 +1,44 @@
+@startuml SDGUC19
+autonumber
+skinparam responseMessageBelowArrow true
+
+title Diagrama de Sequência - Editar Time (UC_19)
+
+actor "Administrador / Escola" as User
+boundary "Tela do Sistema" as UI
+control "Sistema" as Sistema
+database "Banco de Dados" as DB
+
+User -> UI: Acessa a tela de visualização do time
+activate UI
+
+UI --> User: Exibe os campos para edição
+deactivate UI
+
+User -> UI: Altera os dados e clica em salvar
+activate UI
+
+UI -> Sistema: Envia os dados atualizados
+activate Sistema
+
+Sistema -> Sistema: Valida se as informações estão corretas
+
+alt Dados obrigatórios inválidos ou ausentes (Fluxo Alternativo 4A)
+    Sistema --> UI: Informa quais campos precisam de correção
+    UI --> User: Exibe mensagens de alerta nos campos incorretos
+    note right of User: Usuário corrige os dados e tenta novamente
+
+else Dados corretos (Fluxo Principal)
+    Sistema -> DB: Atualiza as informações do time
+    activate DB
+    DB --> Sistema: Confirma que os dados foram alterados
+    deactivate DB
+    
+    Sistema --> UI: Confirma que a edição foi salva
+    deactivate Sistema
+    
+    UI --> User: Mostra mensagem: "Time atualizado com sucesso!"
+    deactivate UI
+end
+
+@enduml

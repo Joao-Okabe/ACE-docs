@@ -1,0 +1,35 @@
+@startuml SDGUC29
+autonumber
+skinparam responseMessageBelowArrow true
+
+title Diagrama de Sequência - Adicionar Escalação Atual (UC_29)
+
+actor "Administrador / Escola" as User
+boundary "Tela do Sistema" as UI
+control "Sistema" as Sistema
+database "Banco de Dados" as DB
+
+User -> UI: Visualiza a tela de uma partida específica
+activate UI
+
+User -> UI: Seleciona e envia a escalação do time
+
+UI -> Sistema: Envia a lista de atletas escalados
+activate Sistema
+
+Sistema -> Sistema: Valida os atletas e a escalação
+
+Sistema -> DB: Salva a escalação atual para a partida
+activate DB
+DB --> Sistema: Confirma gravação da escalação
+deactivate DB
+
+Sistema -> Sistema: Registra o histórico da operação
+
+Sistema --> UI: Confirma que a escalação foi adicionada
+deactivate Sistema
+
+UI --> User: Mostra mensagem: "Escalação salva com sucesso!"
+deactivate UI
+
+@enduml

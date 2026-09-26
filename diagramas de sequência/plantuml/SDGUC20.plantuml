@@ -1,0 +1,59 @@
+@startuml SDGUC20
+autonumber
+skinparam responseMessageBelowArrow true
+
+title Diagrama de Sequência - Excluir Time (UC_20)
+
+actor "Administrador / Escola" as User
+boundary "Tela do Sistema" as UI
+control "Sistema" as Sistema
+database "Banco de Dados" as DB
+
+User -> UI: Solicita a lista de times/escolas
+activate UI
+
+UI -> Sistema: Busca lista no sistema
+activate Sistema
+Sistema -> DB: Consulta registros cadastrados
+activate DB
+DB --> Sistema: Retorna a lista encontrada
+deactivate DB
+Sistema --> UI: Envia a lista para exibição
+deactivate Sistema
+
+UI --> User: Mostra a lista na tela
+deactivate UI
+
+User -> UI: Seleciona o item para excluir
+activate UI
+UI --> User: Solicita confirmação de senha
+deactivate UI
+
+User -> UI: Digita a senha e confirma
+activate UI
+UI -> Sistema: Envia pedido de exclusão com a senha
+activate Sistema
+
+Sistema -> Sistema: Valida a senha informada
+
+alt Senha incorreta (Fluxo Alternativo 6A)
+    Sistema --> UI: Avisa que a senha está incorreta
+    UI --> User: Mostra erro: "Senha incorreta, tente novamente"
+    note right of User: Usuário digita a senha novamente
+
+else Senha correta (Fluxo Principal)
+    Sistema -> DB: Remove o registro do sistema
+    activate DB
+    DB --> Sistema: Confirma remoção
+    deactivate DB
+    
+    Sistema -> Sistema: Registra o histórico da operação
+    
+    Sistema --> UI: Informa que a exclusão foi concluída
+    deactivate Sistema
+    
+    UI --> User: Mostra mensagem: "Excluído com sucesso!"
+    deactivate UI
+end
+
+@enduml

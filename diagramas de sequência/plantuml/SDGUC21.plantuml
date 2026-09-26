@@ -1,0 +1,33 @@
+@startuml SDGUC21
+autonumber
+skinparam responseMessageBelowArrow true
+
+title Diagrama de Sequência - Listar Times da Escola (UC_21)
+
+actor "Administrador / Escola" as User
+boundary "Tela do Sistema" as UI
+control "Sistema" as Sistema
+database "Banco de Dados" as DB
+
+User -> UI: Acessa a tela de listagem de times
+activate UI
+
+User -> UI: Escolhe os filtros desejados e pesquisa
+
+UI -> Sistema: Solicita a busca com os filtros selecionados
+activate Sistema
+
+Sistema -> DB: Busca os times correspondentes
+activate DB
+DB --> Sistema: Retorna os times encontrados
+deactivate DB
+
+Sistema -> Sistema: Registra o histórico da consulta
+
+Sistema --> UI: Envia os dados para exibição
+deactivate Sistema
+
+UI --> User: Apresenta a lista de times na tela
+deactivate UI
+
+@enduml

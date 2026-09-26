@@ -1,0 +1,38 @@
+@startuml SDGUC27
+autonumber
+skinparam responseMessageBelowArrow true
+
+title Diagrama de Sequência - Configurar Categoria do Time (UC_27)
+
+actor "Administrador" as User
+boundary "Tela do Sistema" as UI
+control "Sistema" as Sistema
+database "Banco de Dados" as DB
+
+User -> UI: Acessa a tela de listagem de times
+activate UI
+UI --> User: Exibe os times cadastrados
+deactivate UI
+
+User -> UI: Seleciona o time e escolhe a categoria
+activate UI
+
+UI -> Sistema: Envia a categoria escolhida para o time
+activate Sistema
+
+Sistema -> Sistema: Valida as informações
+
+Sistema -> DB: Salva a categoria no cadastro do time
+activate DB
+DB --> Sistema: Confirma que os dados foram salvos
+deactivate DB
+
+Sistema -> Sistema: Registra o histórico da operação
+
+Sistema --> UI: Confirma a alteração realizada
+deactivate Sistema
+
+UI --> User: Mostra mensagem: "Categoria configurada com sucesso!"
+deactivate UI
+
+@enduml

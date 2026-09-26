@@ -1,0 +1,31 @@
+@startuml SDGUC30
+autonumber
+skinparam responseMessageBelowArrow true
+
+title Diagrama de Sequência - Visualizar Ranking por Equipe (UC_30)
+
+actor "Administrador" as User
+boundary "Tela do Sistema" as UI
+control "Sistema" as Sistema
+database "Banco de Dados" as DB
+
+User -> UI: Acessa a tela de ranking dos times
+activate UI
+
+UI -> Sistema: Solicita a classificação das equipes
+activate Sistema
+
+Sistema -> DB: Consulta pontuações e dados das equipes
+activate DB
+DB --> Sistema: Retorna os dados calculados
+deactivate DB
+
+Sistema -> Sistema: Organiza a classificação e registra o acesso
+
+Sistema --> UI: Envia o ranking organizado
+deactivate Sistema
+
+UI --> User: Apresenta a tabela de classificação na tela
+deactivate UI
+
+@enduml

@@ -1,0 +1,59 @@
+@startuml SDGUC23
+autonumber
+skinparam responseMessageBelowArrow true
+
+title Diagrama de Sequência - Remover Atleta de Time (UC_23)
+
+actor "Administrador / Escola" as User
+boundary "Tela do Sistema" as UI
+control "Sistema" as Sistema
+database "Banco de Dados" as DB
+
+User -> UI: Consulta os atletas de um time
+activate UI
+
+UI -> Sistema: Busca atletas do time
+activate Sistema
+Sistema -> DB: Consulta atletas vinculados
+activate DB
+DB --> Sistema: Retorna a lista de atletas
+deactivate DB
+Sistema --> UI: Envia a lista encontrada
+deactivate Sistema
+
+UI --> User: Mostra a lista de atletas na tela
+deactivate UI
+
+User -> UI: Seleciona o atleta que deseja remover
+activate UI
+UI --> User: Pede a confirmação com senha
+deactivate UI
+
+User -> UI: Informa a senha e confirma a remoção
+activate UI
+UI -> Sistema: Envia solicitação de remoção com a senha
+activate Sistema
+
+Sistema -> Sistema: Valida a senha
+
+alt Falha na remoção (Fluxo Alternativo 5A)
+    Sistema -> Sistema: Cancela a operação e não altera nada
+    Sistema --> UI: Avisa que a remoção não deu certo
+    UI --> User: Mostra mensagem: "Não foi possível concluir a remoção"
+
+else Remoção confirmada (Fluxo Principal)
+    Sistema -> DB: Remove o vínculo do atleta com o time
+    activate DB
+    DB --> Sistema: Confirma a remoção
+    deactivate DB
+    
+    Sistema -> Sistema: Registra o histórico da operação
+    
+    Sistema --> UI: Confirma que o atleta foi removido
+    deactivate Sistema
+    
+    UI --> User: Mostra mensagem: "Atleta removido com sucesso!"
+    deactivate UI
+end
+
+@enduml

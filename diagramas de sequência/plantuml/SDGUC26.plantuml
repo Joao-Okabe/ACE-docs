@@ -1,0 +1,45 @@
+@startuml SDGUC26
+autonumber
+skinparam responseMessageBelowArrow true
+
+title Diagrama de Sequência - Definir Técnico do Time (UC_26)
+
+actor "Administrador / Escola" as User
+boundary "Tela do Sistema" as UI
+control "Sistema" as Sistema
+database "Banco de Dados" as DB
+
+User -> UI: Acessa a listagem de responsáveis
+activate UI
+UI --> User: Exibe lista de pessoas cadastradas
+deactivate UI
+
+User -> UI: Seleciona o responsável como técnico e confirma
+activate UI
+
+UI -> Sistema: Envia a escolha do técnico para o time
+activate Sistema
+
+Sistema -> Sistema: Valida as informações enviadas
+
+alt Falha ao definir técnico (Fluxo Alternativo 5A)
+    Sistema -> Sistema: Desfaz a operação e descarta mudanças
+    Sistema --> UI: Informa que ocorreu um erro
+    UI --> User: Mostra mensagem: "Não foi possível registrar o técnico"
+
+else Técnico definido com sucesso (Fluxo Principal)
+    Sistema -> DB: Registra o técnico vinculado ao time
+    activate DB
+    DB --> Sistema: Confirma a gravação
+    deactivate DB
+    
+    Sistema -> Sistema: Registra o histórico da operação
+    
+    Sistema --> UI: Confirma que o técnico foi definido
+    deactivate Sistema
+    
+    UI --> User: Mostra mensagem: "Técnico registrado com sucesso!"
+    deactivate UI
+end
+
+@enduml

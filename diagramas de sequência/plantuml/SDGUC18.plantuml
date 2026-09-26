@@ -1,0 +1,44 @@
+@startuml SDGUC18
+autonumber
+skinparam responseMessageBelowArrow true
+
+title Diagrama de Sequência - Consultar Time (UC_18)
+
+actor "Administrador / Escola" as User
+boundary "Tela do Sistema" as UI
+control "Sistema" as Sistema
+database "Banco de Dados" as DB
+
+User -> UI: Acessa a tela de consulta
+activate UI
+
+UI --> User: Exibe os filtros de pesquisa
+deactivate UI
+
+User -> UI: Informa os filtros e clica em buscar
+activate UI
+
+UI -> Sistema: Envia os critérios de pesquisa
+activate Sistema
+
+Sistema -> DB: Busca os times com base nos filtros
+activate DB
+DB --> Sistema: Retorna o resultado da pesquisa
+deactivate DB
+
+Sistema -> Sistema: Registra a consulta no histórico
+
+alt Nenhum time encontrado (Fluxo Alternativo 4A)
+    Sistema --> UI: Informa que nada foi encontrado
+    UI --> User: Mostra mensagem: "Nenhum time localizado com esses dados"
+    note right of User: Caso de uso encerrado
+
+else Times encontrados (Fluxo Principal)
+    Sistema --> UI: Envia a lista dos times localizados
+    deactivate Sistema
+    
+    UI --> User: Mostra as informações do time na tela
+    deactivate UI
+end
+
+@enduml

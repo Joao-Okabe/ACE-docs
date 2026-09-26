@@ -1,0 +1,45 @@
+@startuml SDGUC24
+autonumber
+skinparam responseMessageBelowArrow true
+
+title Diagrama de Sequência - Registrar Função do Atleta (UC_24)
+
+actor "Administrador / Escola" as User
+boundary "Tela do Sistema" as UI
+control "Sistema" as Sistema
+database "Banco de Dados" as DB
+
+User -> UI: Acessa a listagem de atletas
+activate UI
+UI --> User: Exibe os atletas
+deactivate UI
+
+User -> UI: Escolhe a nova função do atleta e confirma
+activate UI
+
+UI -> Sistema: Envia a função selecionada
+activate Sistema
+
+Sistema -> Sistema: Confere se os dados estão corretos
+
+alt Falha no registro (Fluxo Alternativo 5A)
+    Sistema -> Sistema: Cancela a operação e descarta alterações
+    Sistema --> UI: Avisa que houve erro no registro
+    UI --> User: Mostra mensagem: "Não foi possível concluir o registro da função"
+
+else Registro concluído (Fluxo Principal)
+    Sistema -> DB: Salva a nova função do atleta
+    activate DB
+    DB --> Sistema: Confirma que a função foi salva
+    deactivate DB
+    
+    Sistema -> Sistema: Registra o histórico da operação
+    
+    Sistema --> UI: Informa confirmação do registro
+    deactivate Sistema
+    
+    UI --> User: Mostra mensagem: "Função registrada com sucesso!"
+    deactivate UI
+end
+
+@enduml

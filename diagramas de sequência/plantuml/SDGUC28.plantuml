@@ -1,0 +1,38 @@
+@startuml SDGUC28
+autonumber
+skinparam responseMessageBelowArrow true
+
+title Diagrama de Sequência - Configurar Modalidade Esportiva (UC_28)
+
+actor "Administrador / Escola" as User
+boundary "Tela do Sistema" as UI
+control "Sistema" as Sistema
+database "Banco de Dados" as DB
+
+User -> UI: Acessa a tela de listagem de times
+activate UI
+UI --> User: Exibe os times cadastrados
+deactivate UI
+
+User -> UI: Seleciona o time e a modalidade esportiva
+activate UI
+
+UI -> Sistema: Envia a modalidade esportiva para o time
+activate Sistema
+
+Sistema -> Sistema: Valida os dados da modalidade
+
+Sistema -> DB: Salva a modalidade vinculada ao time
+activate DB
+DB --> Sistema: Confirma gravação dos dados
+deactivate DB
+
+Sistema -> Sistema: Registra o histórico da operação
+
+Sistema --> UI: Confirma a conclusão da configuração
+deactivate Sistema
+
+UI --> User: Mostra mensagem: "Modalidade esportiva configurada com sucesso!"
+deactivate UI
+
+@enduml

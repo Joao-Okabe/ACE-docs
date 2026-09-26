@@ -1,0 +1,45 @@
+@startuml SDGUC25
+autonumber
+skinparam responseMessageBelowArrow true
+
+title Diagrama de Sequência - Definir Capitão do Time (UC_25)
+
+actor "Administrador / Escola" as User
+boundary "Tela do Sistema" as UI
+control "Sistema" as Sistema
+database "Banco de Dados" as DB
+
+User -> UI: Acessa a lista de atletas do time
+activate UI
+UI --> User: Mostra os atletas disponíveis
+deactivate UI
+
+User -> UI: Seleciona o atleta como capitão e confirma
+activate UI
+
+UI -> Sistema: Envia a indicação de capitão
+activate Sistema
+
+Sistema -> Sistema: Valida os dados da escolha
+
+alt Falha ao definir capitão (Fluxo Alternativo 5A)
+    Sistema -> Sistema: Cancela a operação e não altera nada
+    Sistema --> UI: Informa falha na atribuição
+    UI --> User: Mostra mensagem: "Não foi possível definir o capitão"
+
+else Capitão definido com sucesso (Fluxo Principal)
+    Sistema -> DB: Atualiza o status de capitão do atleta
+    activate DB
+    DB --> Sistema: Confirma a gravação dos dados
+    deactivate DB
+    
+    Sistema -> Sistema: Registra o histórico da operação
+    
+    Sistema --> UI: Confirma a definição do capitão
+    deactivate Sistema
+    
+    UI --> User: Mostra mensagem: "Capitão definido com sucesso!"
+    deactivate UI
+end
+
+@enduml

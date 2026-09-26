@@ -4,7 +4,7 @@
 
 Table papel {
   cd_papel integer [pk, increment]
-  nome varchar(50) [not null, unique]
+  nm_papel varchar(50) [not null, unique]
 }
 
 
@@ -41,16 +41,18 @@ Table usuario_papel {
 Table escola {
   cd_escola integer [pk, increment]
   nm_escola varchar(150) [not null]
-  numero varchar(20)
-  cep varchar(9)
   telefone varchar(20)
+  cep varchar(9)
+  numero varchar(20)
   email varchar(150)
   categoria_administrativa varchar(20) [not null]
   path_brasao text
   criada_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
   ativa boolean [not null, default: true]
 
-  Note: 'categoria_administrativa: Escola Municipal, Escola Estadual ou Privada'
+  indexes {
+    categoria_administrativa [name: 'chk_categoria']
+  }
 }
 
 Table vinculo_usuario_escola {
@@ -81,8 +83,6 @@ Table aluno {
   ativo boolean [not null, default: true]
   criado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
   atualizado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
-
-  Note: 'sexo: M, F ou O'
 }
 
 Table documentos_aluno {
@@ -112,8 +112,6 @@ Table modalidade {
   indexes {
     (sexo, categoria) [unique]
   }
-
-  Note: 'sexo: M, F ou MISTO, categoria: Sub14, Sub18 ou MISTO'
 }
 
 Table esporte {
@@ -146,8 +144,6 @@ Table competicao {
   status varchar(30) [not null, default: 'PLANEJADA']
   descricao text
   criado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
-
-  Note: 'status: PLANEJADA, INSCRICOES, EM_ANDAMENTO, FINALIZADA ou CANCELADA'
 }
 
 
@@ -201,14 +197,23 @@ Table vinculo_time_integrante {
   indexes {
     (cd_time, cd_usuario) [unique]
   }
-
-  Note: 'numero_camisa deve ser maior que 0 quando informado'
 }
 
+Table escalacao_time {
+  cd_vinculo_time_integrante integer [pk]
+  titular boolean [not null, default: false]
+  ativo boolean [not null, default: true]
+}
 
-// ============================================================
-// 8. RESPONSÁVEIS
-// ============================================================
+Table vinculo_tecnico_time {
+  cd_usuario integer [not null]
+  cd_time integer [not null]
+  ativo boolean [not null, default: true]
+
+  indexes {
+    (cd_usuario, cd_time) [pk]
+  }
+}
 
 Table responsavel {
   cd_responsavel integer [pk, increment]
@@ -228,16 +233,14 @@ Table vinculo_time_responsavel {
 
 
 // ============================================================
-// 9. TIMES INSCRITOS NA COMPETIÇÃO
+// 8. INSCRIÇÃO NA COMPETIÇÃO
 // ============================================================
 
 Table inscricao_competicao {
-  cd_inscricao_competicao integer [pk]
+  cd_inscricao_competicao integer [pk, increment]
   cd_competicao integer [not null]
-  dt_inicio_inscricao timestamp [not null]
+  dt_inicio_inscricao timestamp
   dt_encerramento_inscricao timestamp
-
-  Note: 'dt_encerramento_inscricao deve ser maior ou igual a dt_inicio_inscricao'
 }
 
 Table vinculo_inscricao_time {
@@ -253,7 +256,7 @@ Table vinculo_inscricao_time {
 
 
 // ============================================================
-// 10. ETAPAS DA COMPETIÇÃO
+// 9. ETAPAS DA COMPETIÇÃO
 // ============================================================
 
 Table etapa_competicao {
@@ -266,15 +269,9 @@ Table etapa_competicao {
 
   indexes {
     (cd_competicao, ordem) [unique]
+    (cd_competicao, nm_etapa) [unique]
   }
-
-  Note: 'ordem deve ser maior que 0'
 }
-
-
-// ============================================================
-// 11. RODADAS
-// ============================================================
 
 Table rodada_competicao {
   cd_rodada integer [pk, increment]
@@ -288,19 +285,18 @@ Table rodada_competicao {
   indexes {
     (cd_etapa_competicao, nr_rodada) [unique]
   }
-
-  Note: 'nr_rodada deve ser maior que 0, status: PENDENTE, EM_ANDAMENTO ou FINALIZADA'
 }
 
 
 // ============================================================
-// 12. GRUPOS
+// 10. GRUPOS
 // ============================================================
 
 Table grupo_competicao {
   cd_grupo integer [pk, increment]
   cd_etapa_competicao integer [not null]
-  nm_grupo varchar(50) [not null]
+  nm_grupo varchar(100) [not null]
+  ordem integer
 
   indexes {
     (cd_etapa_competicao, nm_grupo) [unique]
@@ -308,18 +304,17 @@ Table grupo_competicao {
 }
 
 Table vinculo_grupo_time {
-  cd_vinculo_grupo_time integer [pk, increment]
   cd_grupo integer [not null]
   cd_time integer [not null]
 
   indexes {
-    (cd_grupo, cd_time) [unique]
+    (cd_grupo, cd_time) [pk]
   }
 }
 
 
 // ============================================================
-// 13. MÉTRICAS DE CLASSIFICAÇÃO
+// 11. CLASSIFICAÇÃO
 // ============================================================
 
 Table metrica_classificacao {
@@ -328,22 +323,12 @@ Table metrica_classificacao {
   descricao text
 }
 
-
-// ============================================================
-// 14. CONFIGURAÇÃO DE CLASSIFICAÇÃO
-// ============================================================
-
 Table configuracao_classificacao {
   cd_configuracao_classificacao integer [pk, increment]
   cd_competicao integer [not null, unique]
   nome varchar(100) [not null]
   descricao text
 }
-
-
-// ============================================================
-// 15. CRITÉRIOS DA CLASSIFICAÇÃO
-// ============================================================
 
 Table criterio_classificacao {
   cd_criterio_classificacao integer [pk, increment]
@@ -356,33 +341,20 @@ Table criterio_classificacao {
     (cd_configuracao_classificacao, ordem) [unique]
     (cd_configuracao_classificacao, cd_metrica_classificacao) [unique]
   }
-
-  Note: 'direcao: ASC ou DESC, ordem deve ser maior que 0'
 }
-
-
-// ============================================================
-// 16. CLASSIFICAÇÃO DOS GRUPOS
-// ============================================================
 
 Table classificacao_grupo {
   cd_classificacao_grupo integer [pk, increment]
-  cd_vinculo_grupo_time integer [not null, unique]
   cd_grupo integer [not null]
+  cd_time integer [not null]
   posicao integer [not null]
   atualizado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
 
   indexes {
+    (cd_grupo, cd_time) [unique]
     (cd_grupo, posicao) [unique]
   }
-
-  Note: 'posicao deve ser maior que 0'
 }
-
-
-// ============================================================
-// 17. ESTATÍSTICAS DA CLASSIFICAÇÃO
-// ============================================================
 
 Table estatistica_classificacao {
   cd_classificacao_grupo integer [not null]
@@ -396,26 +368,25 @@ Table estatistica_classificacao {
 
 
 // ============================================================
-// 18. CONFRONTOS
+// 12. CONFRONTOS / CHAVEAMENTO
 // ============================================================
 
 Table confronto {
   cd_confronto integer [pk, increment]
-  cd_etapa_competicao integer [not null]
+  cd_rodada integer [not null]
   nr_confronto integer [not null]
   nome varchar(100)
+  status varchar(30) [not null, default: 'PENDENTE']
+  cd_vencedor integer
+  cd_confronto_anterior_a integer
+  cd_confronto_anterior_b integer
 
   indexes {
-    (cd_etapa_competicao, nr_confronto) [unique]
+    (cd_rodada, nr_confronto) [unique]
+    cd_confronto_anterior_a [name: 'idx_confronto_anterior_a']
+    cd_confronto_anterior_b [name: 'idx_confronto_anterior_b']
   }
-
-  Note: 'nr_confronto deve ser maior que 0'
 }
-
-
-// ============================================================
-// 19. ORIGEM DO PARTICIPANTE
-// ============================================================
 
 Table origem_participante_confronto {
   cd_origem_participante integer [pk, increment]
@@ -424,48 +395,37 @@ Table origem_participante_confronto {
   cd_confronto integer
   cd_classificacao_grupo integer
   resultado_confronto varchar(20)
-
-  Note: 'tipo_origem: TIME, CONFRONTO ou CLASSIFICACAO_GRUPO, resultado_confronto: VENCEDOR ou PERDEDOR quando a origem for CONFRONTO'
 }
-
-
-// ============================================================
-// 20. PARTICIPANTES DO CONFRONTO
-// ============================================================
 
 Table confronto_participante {
   cd_confronto integer [not null]
   posicao smallint [not null]
   cd_origem_participante integer [not null]
+  status varchar(20) [not null, default: 'PENDENTE']
 
   indexes {
     (cd_confronto, posicao) [pk]
     (cd_confronto, cd_origem_participante) [unique]
+    cd_origem_participante [name: 'idx_confronto_participante_origem']
   }
-
-  Note: 'posicao: 1 ou 2'
 }
 
 
 // ============================================================
-// 21. PARTIDAS
+// 13. PARTIDAS
 // ============================================================
 
 Table partida {
   cd_partida integer [pk, increment]
   cd_competicao integer [not null]
-  cd_rodada integer
   cd_confronto integer
   status varchar(30) [not null, default: 'AGENDADA']
   inicio_agendado timestamp
 
-  Note: 'status: AGENDADA, EM_ANDAMENTO, FINALIZADA ou CANCELADA'
+  indexes {
+    cd_confronto [name: 'idx_partida_confronto']
+  }
 }
-
-
-// ============================================================
-// 22. INFORMAÇÕES DA PARTIDA
-// ============================================================
 
 Table info_partida {
   cd_partida integer [pk]
@@ -475,11 +435,6 @@ Table info_partida {
   local_partida varchar(150)
   observacoes text
 }
-
-
-// ============================================================
-// 23. ETAPAS INTERNAS DA PARTIDA
-// ============================================================
 
 Table etapa_partida {
   cd_etapa_partida integer [pk, increment]
@@ -491,14 +446,7 @@ Table etapa_partida {
   indexes {
     (cd_partida, nr_etapa) [unique]
   }
-
-  Note: 'Representa tempos, sets ou outros períodos internos da partida, nr_etapa deve ser maior que 0'
 }
-
-
-// ============================================================
-// 24. RESULTADO POR ETAPA DA PARTIDA
-// ============================================================
 
 Table resultado_etapa_partida {
   cd_etapa_partida integer [not null]
@@ -508,14 +456,7 @@ Table resultado_etapa_partida {
   indexes {
     (cd_etapa_partida, cd_time) [pk]
   }
-
-  Note: 'pontuacao deve ser maior ou igual a 0'
 }
-
-
-// ============================================================
-// 25. TIMES DA PARTIDA
-// ============================================================
 
 Table vinculo_partida_time {
   cd_partida integer [not null]
@@ -529,28 +470,26 @@ Table vinculo_partida_time {
 
 
 // ============================================================
-// 26. PENALIDADES
+// 14. PENALIDADES
 // ============================================================
 
 Table tipo_penalidade {
   cd_tipo_penalidade integer [pk, increment]
   nm_tipo_penalidade varchar(100) [not null, unique]
-  origem_penalidade varchar(100) [not null]
   descricao text
 }
 
 Table penalidade {
   cd_penalidade integer [pk, increment]
   cd_competicao integer [not null]
-  cd_partida integer
-  cd_vinculo_time_integrante integer [not null]
+  cd_time integer [not null]
+  cd_usuario integer [not null]
+  cd_funcao_integrante integer [not null]
   cd_tipo_penalidade integer [not null]
   descricao text
   valor numeric(10,3)
   aplicado_em timestamp [not null, default: `CURRENT_TIMESTAMP`]
   ativo boolean [not null, default: true]
-
-  Note: 'valor deve ser maior ou igual a 0 quando informado'
 }
 
 
@@ -558,101 +497,111 @@ Table penalidade {
 // RELACIONAMENTOS
 // ============================================================
 
-// Usuários
-Ref: usuario_papel.cd_usuario > usuario.cd_usuario
-Ref: usuario_papel.cd_papel > papel.cd_papel
+// Usuários / papéis
+Ref: usuario_papel.cd_usuario > usuario.cd_usuario [delete: cascade]
+Ref: usuario_papel.cd_papel > papel.cd_papel [delete: cascade]
 
-// Escola
-Ref: vinculo_usuario_escola.cd_usuario > usuario.cd_usuario
-Ref: vinculo_usuario_escola.cd_escola > escola.cd_escola
-Ref: vinculo_usuario_escola.cd_papel > papel.cd_papel
+// Usuários / escolas
+Ref: vinculo_usuario_escola.cd_usuario > usuario.cd_usuario [delete: cascade]
+Ref: vinculo_usuario_escola.cd_escola > escola.cd_escola [delete: cascade]
+Ref: vinculo_usuario_escola.cd_papel > papel.cd_papel [delete: restrict]
 
-// Alunos
-Ref: aluno.cd_usuario > usuario.cd_usuario
-Ref: documentos_aluno.cd_aluno > aluno.cd_aluno
+// Aluno
+Ref: aluno.cd_usuario - usuario.cd_usuario [delete: cascade]
+Ref: documentos_aluno.cd_aluno > aluno.cd_aluno [delete: cascade]
 
 // Competição
-Ref: competicao.cd_criador > usuario.cd_usuario
-Ref: competicao.cd_esporte > esporte.cd_esporte
-Ref: competicao.cd_modalidade > modalidade.cd_modalidade
-Ref: competicao.cd_formato > formato.cd_formato
-Ref: competicao.cd_escola > escola.cd_escola
+Ref: competicao.cd_criador > usuario.cd_usuario [delete: restrict]
+Ref: competicao.cd_esporte > esporte.cd_esporte [delete: restrict]
+Ref: competicao.cd_modalidade > modalidade.cd_modalidade [delete: restrict]
+Ref: competicao.cd_formato > formato.cd_formato [delete: restrict]
+Ref: competicao.cd_escola > escola.cd_escola [delete: set null]
 
 // Times
-Ref: time.cd_esporte > esporte.cd_esporte
-Ref: funcao_integrante.cd_esporte > esporte.cd_esporte
+Ref: time.cd_esporte > esporte.cd_esporte [delete: restrict]
+Ref: funcao_integrante.cd_esporte > esporte.cd_esporte [delete: cascade]
 
-Ref: vinculo_time_escola.cd_time > time.cd_time
-Ref: vinculo_time_escola.cd_escola > escola.cd_escola
+Ref: vinculo_time_escola.cd_time > time.cd_time [delete: cascade]
+Ref: vinculo_time_escola.cd_escola > escola.cd_escola [delete: cascade]
 
-Ref: vinculo_time_integrante.cd_time > time.cd_time
-Ref: vinculo_time_integrante.cd_usuario > usuario.cd_usuario
-Ref: vinculo_time_integrante.cd_funcao_integrante > funcao_integrante.cd_funcao_integrante
+Ref: vinculo_time_integrante.cd_time > time.cd_time [delete: cascade]
+Ref: vinculo_time_integrante.cd_usuario > usuario.cd_usuario [delete: cascade]
+Ref: vinculo_time_integrante.cd_funcao_integrante > funcao_integrante.cd_funcao_integrante [delete: set null]
 
-// Responsáveis
-Ref: responsavel.cd_usuario > usuario.cd_usuario
+Ref: escalacao_time.cd_vinculo_time_integrante - vinculo_time_integrante.cd_vinculo_time_integrante [delete: cascade]
+
+Ref: vinculo_tecnico_time.cd_usuario > usuario.cd_usuario [delete: cascade]
+Ref: vinculo_tecnico_time.cd_time > time.cd_time [delete: cascade]
+
+Ref: responsavel.cd_usuario - usuario.cd_usuario
+
 Ref: vinculo_time_responsavel.cd_time > time.cd_time
 Ref: vinculo_time_responsavel.cd_responsavel > responsavel.cd_responsavel
 
-// Inscrições
-Ref: inscricao_competicao.cd_competicao > competicao.cd_competicao
-Ref: vinculo_inscricao_time.cd_inscricao_competicao > inscricao_competicao.cd_inscricao_competicao
-Ref: vinculo_inscricao_time.cd_time > time.cd_time
+// Inscrição
+Ref: inscricao_competicao.cd_competicao > competicao.cd_competicao [delete: cascade]
+
+Ref: vinculo_inscricao_time.cd_inscricao_competicao > inscricao_competicao.cd_inscricao_competicao [delete: cascade]
+Ref: vinculo_inscricao_time.cd_time > time.cd_time [delete: cascade]
 
 // Etapas
-Ref: etapa_competicao.cd_competicao > competicao.cd_competicao
-Ref: etapa_competicao.cd_tipo_etapa > tipo_etapa.cd_tipo_etapa
+Ref: etapa_competicao.cd_competicao > competicao.cd_competicao [delete: cascade]
+Ref: etapa_competicao.cd_tipo_etapa > tipo_etapa.cd_tipo_etapa [delete: restrict]
 
-// Rodadas
-Ref: rodada_competicao.cd_etapa_competicao > etapa_competicao.cd_etapa_competicao
+Ref: rodada_competicao.cd_etapa_competicao > etapa_competicao.cd_etapa_competicao [delete: cascade]
 
 // Grupos
-Ref: grupo_competicao.cd_etapa_competicao > etapa_competicao.cd_etapa_competicao
+Ref: grupo_competicao.cd_etapa_competicao > etapa_competicao.cd_etapa_competicao [delete: cascade]
 
-Ref: vinculo_grupo_time.cd_grupo > grupo_competicao.cd_grupo
-Ref: vinculo_grupo_time.cd_time > time.cd_time
+Ref: vinculo_grupo_time.cd_grupo > grupo_competicao.cd_grupo [delete: cascade]
+Ref: vinculo_grupo_time.cd_time > time.cd_time [delete: cascade]
 
 // Classificação
-Ref: configuracao_classificacao.cd_competicao > competicao.cd_competicao
+Ref: configuracao_classificacao.cd_competicao - competicao.cd_competicao [delete: cascade]
 
-Ref: criterio_classificacao.cd_configuracao_classificacao > configuracao_classificacao.cd_configuracao_classificacao
-Ref: criterio_classificacao.cd_metrica_classificacao > metrica_classificacao.cd_metrica_classificacao
+Ref: criterio_classificacao.cd_configuracao_classificacao > configuracao_classificacao.cd_configuracao_classificacao [delete: cascade]
+Ref: criterio_classificacao.cd_metrica_classificacao > metrica_classificacao.cd_metrica_classificacao [delete: restrict]
 
-Ref: classificacao_grupo.cd_vinculo_grupo_time > vinculo_grupo_time.cd_vinculo_grupo_time
-Ref: classificacao_grupo.cd_grupo > grupo_competicao.cd_grupo
+Ref: classificacao_grupo.cd_grupo > vinculo_grupo_time.cd_grupo [delete: cascade]
+Ref: classificacao_grupo.cd_time > vinculo_grupo_time.cd_time [delete: cascade]
 
-Ref: estatistica_classificacao.cd_classificacao_grupo > classificacao_grupo.cd_classificacao_grupo
-Ref: estatistica_classificacao.cd_metrica_classificacao > metrica_classificacao.cd_metrica_classificacao
+Ref: estatistica_classificacao.cd_classificacao_grupo > classificacao_grupo.cd_classificacao_grupo [delete: cascade]
+Ref: estatistica_classificacao.cd_metrica_classificacao > metrica_classificacao.cd_metrica_classificacao [delete: restrict]
 
-// Confrontos
-Ref: confronto.cd_etapa_competicao > etapa_competicao.cd_etapa_competicao
+// Confrontos / chaveamento
+Ref: confronto.cd_rodada > rodada_competicao.cd_rodada [delete: cascade]
+Ref: confronto.cd_vencedor > time.cd_time [delete: set null]
 
-Ref: origem_participante_confronto.cd_time > time.cd_time
-Ref: origem_participante_confronto.cd_confronto > confronto.cd_confronto
-Ref: origem_participante_confronto.cd_classificacao_grupo > classificacao_grupo.cd_classificacao_grupo
+Ref: confronto.cd_confronto_anterior_a > confronto.cd_confronto [delete: set null]
+Ref: confronto.cd_confronto_anterior_b > confronto.cd_confronto [delete: set null]
 
-Ref: confronto_participante.cd_confronto > confronto.cd_confronto
-Ref: confronto_participante.cd_origem_participante > origem_participante_confronto.cd_origem_participante
+Ref: origem_participante_confronto.cd_time > time.cd_time [delete: cascade]
+Ref: origem_participante_confronto.cd_confronto > confronto.cd_confronto [delete: cascade]
+Ref: origem_participante_confronto.cd_classificacao_grupo > classificacao_grupo.cd_classificacao_grupo [delete: cascade]
+
+Ref: confronto_participante.cd_confronto > confronto.cd_confronto [delete: cascade]
+Ref: confronto_participante.cd_origem_participante > origem_participante_confronto.cd_origem_participante [delete: cascade]
 
 // Partidas
-Ref: partida.cd_competicao > competicao.cd_competicao
-Ref: partida.cd_rodada > rodada_competicao.cd_rodada
-Ref: partida.cd_confronto > confronto.cd_confronto
+Ref: partida.cd_competicao > competicao.cd_competicao [delete: cascade]
+Ref: partida.cd_confronto > confronto.cd_confronto [delete: set null]
 
-Ref: info_partida.cd_partida > partida.cd_partida
+Ref: info_partida.cd_partida - partida.cd_partida [delete: cascade]
 
-// Etapas internas
-Ref: etapa_partida.cd_partida > partida.cd_partida
+Ref: etapa_partida.cd_partida > partida.cd_partida [delete: cascade]
 
-Ref: resultado_etapa_partida.cd_etapa_partida > etapa_partida.cd_etapa_partida
-Ref: resultado_etapa_partida.cd_time > time.cd_time
+Ref: resultado_etapa_partida.cd_etapa_partida > etapa_partida.cd_etapa_partida [delete: cascade]
+Ref: resultado_etapa_partida.cd_time > time.cd_time [delete: cascade]
 
-// Times da partida
-Ref: vinculo_partida_time.cd_partida > partida.cd_partida
-Ref: vinculo_partida_time.cd_time > time.cd_time
+Ref: vinculo_partida_time.cd_partida > partida.cd_partida [delete: cascade]
+Ref: vinculo_partida_time.cd_time > time.cd_time [delete: cascade]
 
 // Penalidades
-Ref: penalidade.cd_competicao > competicao.cd_competicao
-Ref: penalidade.cd_partida > partida.cd_partida
-Ref: penalidade.cd_vinculo_time_integrante > vinculo_time_integrante.cd_vinculo_time_integrante
-Ref: penalidade.cd_tipo_penalidade > tipo_penalidade.cd_tipo_penalidade
+Ref: penalidade.cd_competicao > competicao.cd_competicao [delete: cascade]
+
+// FK composta: (cd_time, cd_usuario)
+// para vinculo_time_integrante
+Ref: penalidade.(cd_time, cd_usuario) > vinculo_time_integrante.(cd_time, cd_usuario) [delete: cascade]
+
+Ref: penalidade.cd_funcao_integrante > funcao_integrante.cd_funcao_integrante [delete: restrict]
+Ref: penalidade.cd_tipo_penalidade > tipo_penalidade.cd_tipo_penalidade [delete: restrict]
